@@ -114,9 +114,9 @@ abi = JSON.parse(`[
 	}
 ]`)
 VotingContract = web3.eth.contract(abi);
-web3.eth.defaultAccount= '0x434a2b024e7fdde822410b9846764728ce0ac34c';
+web3.eth.defaultAccount= '0xa9613c28517883c7e02259c49fe79ef064e7ea99';
 // In your nodejs console, execute contractInstance.address to get the address at which the contract is deployed and change the line below to use your deployed address
-contractInstance = VotingContract.at('0xa1b4746edaf10194304a9f65d9dfea09e2329189');
+contractInstance = VotingContract.at('0x64e5745e0a0b297d6bdffe0cf584e507ea7dc998');
 
 $(document).ready(function($) {
 	
@@ -133,22 +133,31 @@ $(document).ready(function($) {
 		for(let i=0; i<data.c[0]; i++){
 
 			contractInstance.getPost(i, (err, data) => {
-				let postContainer, postTitle, postContent;
+				let postContainer, postTitle, postContent, buttonDelete;
 				let fragment = document.createDocumentFragment();
 				if(data.length > 0){
 					postContainer = document.createElement('div');
 					postContainer.setAttribute("class", "post-container");
 					postTitle = document.createElement('h4');
-				postTitle.innerHTML = data[1]
-				postContent = document.createElement('p');
-				postContent.innerHTML = data[0]
-				postContainer.appendChild(postTitle)
-				postContainer.appendChild(postContent)
-				fragment.appendChild(postContainer)
-			}
-			document.getElementById('post-list').appendChild(fragment)
-			console.log('Result', data, 'Error', err);
-		});
+					postTitle.innerHTML = data[1]
+					postContent = document.createElement('p');
+					postContent.innerHTML = data[0]
+					buttonDelete = document.createElement('button')
+					buttonDelete.setAttribute("class", "btn btn-danger pull-right")
+					buttonDelete.innerHTML = "Supprimer"
+					buttonDelete.addEventListener('click', () => { 
+						contractInstance.removePost(i, () =>{ 
+							alert('Article '+ data[1] +' supprimé !')
+						})
+					})
+					postContainer.appendChild(buttonDelete)
+					postContainer.appendChild(postTitle)
+					postContainer.appendChild(postContent)
+					fragment.appendChild(postContainer)
+				}
+				document.getElementById('post-list').appendChild(fragment)
+				console.log('Result', data, 'Error', err);
+			});
 		}
 	})
 });
