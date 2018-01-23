@@ -13,12 +13,13 @@
   <h3>Ecrire un nouvel article</h3>
   <form class="form" id="post-form">
     <label>Titre: </label> 
-    <input class="form-control" type="text" maxlength="50" name="title" />
+    <input class="form-control" type="text" maxlength="50" name="title" id="title-input" />
     <br/>
     <label>Contenu:</label><br/>
-    <textarea class="form-control" name="content"></textarea>
+    <textarea class="form-control" name="content" id="content-input"></textarea>
     <br/>
-    <button type="submit" class="btn btn-success">Publier</button>
+    <button type="submit" class="btn btn-success" id="submit-button" >Publier</button>
+    <button type="submit" class="btn btn-danger" id="cancel-button" style="display:none;">Annuler</button>
   </form>
 </body>
 <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>

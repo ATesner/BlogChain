@@ -114,26 +114,47 @@ abi = JSON.parse(`[
 	}
 ]`)
 VotingContract = web3.eth.contract(abi);
-web3.eth.defaultAccount= '0xa9613c28517883c7e02259c49fe79ef064e7ea99';
+web3.eth.defaultAccount= '0x63b7a5065cf11404941ac39883a873430dfaa133';
 // In your nodejs console, execute contractInstance.address to get the address at which the contract is deployed and change the line below to use your deployed address
-contractInstance = VotingContract.at('0x64e5745e0a0b297d6bdffe0cf584e507ea7dc998');
-
+contractInstance = VotingContract.at('0xc3ae10d63779b06571a3c76d127856534f20c89a');
+var editing = false;
+var indexEdit = 0;
 $(document).ready(function($) {
 	
 	$('#post-form').on('submit', (e) => {
 		e.preventDefault();
 		console.log('click !', e.currentTarget.title.value, e.currentTarget.content.value)
 		// contractInstance.addPost()
-		contractInstance.addPost(e.currentTarget.title.value, e.currentTarget.content.value, (err,data) => {
-			console.log('article ajouté !', data, err)
-		})
+		if(!editing){
+
+			contractInstance.addPost(e.currentTarget.title.value, e.currentTarget.content.value, (err,data) => {
+				console.log('article ajouté !', data, err)
+				window.location.reload();
+			})
+		}else{
+			contractInstance.editPost(indexEdit, e.currentTarget.title.value, e.currentTarget.content.value, (err,data) => {
+				console.log('article modifié !', data, err)
+				window.location.reload();
+			})
+		}
+	})
+
+	$('#cancel-button').on('click', (e)=>{
+		e.preventDefault();
+		$('#cancel-button').hide();
+		let submitButton = document.getElementById('submit-button')
+		submitButton.setAttribute('class', 'btn btn-success')
+		submitButton.innerHTML ='Publier'
+		document.getElementById('title-input').value = ''
+		document.getElementById('content-input').value = ''
+		editing = false;
 	})
 	contractInstance.getNbPosts((err,data) =>{
 		console.log('nombre de posts', data)
 		for(let i=0; i<data.c[0]; i++){
 
 			contractInstance.getPost(i, (err, data) => {
-				let postContainer, postTitle, postContent, buttonDelete;
+				let postContainer, postTitle, postContent, buttonDelete, buttonEdit;
 				let fragment = document.createDocumentFragment();
 				if(data.length > 0){
 					postContainer = document.createElement('div');
@@ -147,10 +168,26 @@ $(document).ready(function($) {
 					buttonDelete.innerHTML = "Supprimer"
 					buttonDelete.addEventListener('click', () => { 
 						contractInstance.removePost(i, () =>{ 
-							alert('Article '+ data[1] +' supprimé !')
+							//alert('Article '+ data[1] +' supprimé !')
+							window.location.reload();
 						})
 					})
+					buttonEdit = document.createElement('button')
+					buttonEdit.setAttribute("class", "btn btn-primary pull-right")
+					buttonEdit.innerHTML = "Modifier"
+					buttonEdit.addEventListener('click', () => { 
+						console.log('EDIT ! 	',i)
+						document.getElementById('title-input').value = data[1]
+						document.getElementById('content-input').value = data[0]
+						let submitButton = document.getElementById('submit-button')
+						submitButton.setAttribute('class', 'btn btn-primary')
+						submitButton.innerHTML ='Modifier'
+						$('#cancel-button').show();
+						indexEdit = i;
+						editing = true;
+					})
 					postContainer.appendChild(buttonDelete)
+					postContainer.appendChild(buttonEdit)
 					postContainer.appendChild(postTitle)
 					postContainer.appendChild(postContent)
 					fragment.appendChild(postContainer)
