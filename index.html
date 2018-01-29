@@ -4,6 +4,7 @@
   <title>Blogchain</title>
   <meta charset="utf-8" />
   <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+  <link href="./css/quill.snow.css" rel="stylesheet">
 </head>
 <body class="container">
   <div id="post-list">
@@ -16,7 +17,9 @@
     <input class="form-control" type="text" maxlength="50" name="title" id="title-input" />
     <br/>
     <label>Contenu:</label><br/>
-    <textarea class="form-control" name="content" id="content-input"></textarea>
+    <div id="editor">
+
+    </div>
     <br/>
     <button type="submit" class="btn btn-success" id="submit-button" >Publier</button>
     <button type="submit" class="btn btn-danger" id="cancel-button" style="display:none;">Annuler</button>
@@ -24,5 +27,9 @@
 </body>
 <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>
 <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+<!-- <script src="https://gitcdn.xyz/cdn/nmrugg/LZMA-JS/v2.3.0/src/lzma-min.js"></script> -->
+<!-- <script src="https://unpkg.com/lzma@2.3.2/src/lzma.js"></script> -->
+<!-- <script id="lzutf8" src="https://cdn.jsdelivr.net/npm/lzutf8/build/production/lzutf8.min.js"></script> -->
+<script src="./js/quill.min.js"></script>
 <script src="./index.js"></script>
 </html>
