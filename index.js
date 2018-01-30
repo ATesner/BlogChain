@@ -1,4 +1,4 @@
-web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+// parse l'abi (interface du smart contrat)
 abi = JSON.parse(`[
 	{
 		"constant": false,
@@ -118,150 +118,110 @@ abi = JSON.parse(`[
 		"type": "constructor"
 	}
 ]`)
-//http://jonathanpatrick.me/blog/ethereum-compressed-text
-VotingContract = web3.eth.contract(abi);
-web3.eth.defaultAccount= web3.eth.accounts[0];
-// In your nodejs console, execute contractInstance.address to get the address at which the contract is deployed and change the line below to use your deployed address
-contractInstance = VotingContract.at('0x002ad38e0eed9034e5a280822f1b9f61c9664889');
-var editing = false;
-var indexEdit = 0;
-//var my_lzma = new LZMA("https://unpkg.com/lzma@2.3.2/src/lzma_worker.js")
+web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545")); // connection a la blockchain local
+blogChainContract = web3.eth.contract(abi); // set l'interface de notre contrat
+// set le compte avec lequel on fera appel aux methodes du contract (ici le premier trouvé dans notre blockchain local)
+web3.eth.defaultAccount= web3.eth.accounts[0]; 
+//recupere le contrat via son adresse
+contractInstance = blogChainContract.at('0xc1d911def56c53128c5260499a52c60d893fbac8');
 
-var quill = new Quill('#editor', {
+var editing = false; // pour indiquer si l'on est en mode edition ou publication
+var indexEdit = 0; //pour savoir quel article on modifie
+var quill = new Quill('#editor', { //cree l'editeur WYSIWYG
     theme: 'snow'
-  });
-/*function ab2str(buf) {
-	return String.fromCharCode.apply(null, new Uint16Array(buf));
-  }
+});
 
-  function str2ab(str) {
-	var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-	var bufView = new Uint16Array(buf);
-	for (var i=0, strLen=str.length; i < strLen; i++) {
-	  bufView[i] = str.charCodeAt(i);
-	}
-	return buf;
-  }
-
-  function toHexString(byteArray) {
-	return Array.prototype.map.call(byteArray, function(byte) {
-	  return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-	}).join('');
-  }
-  function buf2hex(buffer) { // buffer is an ArrayBuffer
-	return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
-  }*/
-jQuery('#post-form').on('submit', (e) => {
+// lorsque l'on clique sur "Publier" ou "Modifier"
+document.getElementById('submit-button').addEventListener('click', (e) => {
 	e.preventDefault();
-	// console.log('click !', e.currentTarget.title.value,
-	// e.currentTarget.content.value)
+	let content = quill.container.firstChild.innerHTML; //recupere le titre
+	let title = document.getElementById('title-input'); //recupere le contenu
 	
-	/*console.log("UNCOMPRESS",content.length, content);
-	var output = LZUTF8.compress(content, ["Base64"]);
-	console.log("COMPRESS", output.length, output)
-	var hexContent = buf2hex(output.buffer);
-	console.log('HEX CONTENT', hexContent.length, hexContent)*/
-	// my_lzma.compress(content, 9, (result, error) => {
-	// 	//console.log(result, result.length)
-	// 	var buf = new Uint8Array(result).buffer;
-	// 	//var compressed = '0x' + buffer.toString('hex');
-	// 	var comp = buf2hex(buf)
-	// 	console.log('HEX', result, comp.length, result.length)
-	// 	my_lzma.decompress(result, (data, error) => {
-	// 		console.log(data.length)
-	// 	}, (percent) => {});
-	// 	},(percent) => {})
-	// 	return;
-	//console.log('RESULT', result)
-	//var buf = new Buffer(result);
-// console.log('UNCOMPRESS', content.length)
-// my_lzma.compress(content, 7, (result, error) => {
-// 	var enc = new TextDecoder();
-// 	var enc2 = new TextEncoder("utf-8");
-// 	var buf = new Uint8Array(result);
-	
-// 	var compressed = '0x' + buf.toString('utf8');
-// 	console.log('COMPRESS', result.length, result)
-
-// 	my_lzma.decompress(compressed, (result2, error2) => {
-// 		console.log('DECOMPRESS', result2)
-// 	})
-// });
-let content = quill.container.firstChild.innerHTML
-	if(!editing){
-
-		contractInstance.addPost(e.currentTarget.title.value, content, {gas: 5000000}, (err,data) => {
+	if(!editing){ //si on veut publier
+		//appel la methode addPost du smart contract
+		contractInstance.addPost(title.value, content, {gas: 5000000}, (err,data) => {
 			console.log('article ajouté !', data, err)
-			window.location.reload();
+			window.location.reload(); //refresh de la page une fois l'article ajouté
 		})
-	}else{
-		contractInstance.editPost(indexEdit, e.currentTarget.title.value, content, {gas: 5000000}, (err,data) => {
+
+	}else{ // si on veut modifier
+		//appel la methode editPost du smart contract
+		contractInstance.editPost(indexEdit, title.value, content, {gas: 5000000}, (err,data) => {
 			console.log('article modifié !', data, err)
-			window.location.reload();
+			window.location.reload(); //refresh de la page  une fois l'article ajouté
 		})
 	}
 })
 
-//})
-
-
+//lorsque l'on clique sur "Annuler"
 document.getElementById('cancel-button').addEventListener('click', function(e){
 	e.preventDefault();
-	this.setAttribute('style', 'display:none;');
-	let submitButton = document.getElementById('submit-button')
-	submitButton.setAttribute('class', 'btn btn-success')
-	submitButton.innerHTML ='Publier'
-	document.getElementById('title-input').value = ''
-	quill.container.firstChild.innerHTML = ''
-	editing = false;
+	this.setAttribute('style', 'display:none;'); //cache le bouton "Annuler"
+	let submitButton = document.getElementById('submit-button'); //recupere le bouton "Modifier"
+	submitButton.setAttribute('class', 'btn btn-success'); //change la couleur du bouton en vert
+	submitButton.innerHTML ='Publier'; //set le libelle du bouton
+	document.getElementById('title-input').value = ''; //vide le titre
+	quill.container.firstChild.innerHTML = ''; //vide le contenu
+	editing = false; //indique que l'on est plus en mode edition
 })
+
+//Recupere le nombre d'articles
 contractInstance.getNbPosts((err,data) =>{
 	console.log('nombre de posts', data.c[0])
-	for(let i=0; i<data.c[0]; i++){
 
-		contractInstance.getPost(i, {gas: 5000000}, (err, data) => {
-			console.log('DATA', i, data, err)
+	for(let i=0; i<data.c[0]; i++){ //parcours des index
+		
+		contractInstance.getPost(i, {gas: 5000000}, (err, data) => { //recupere l'article avec l'index courant
+		console.log('DATA', i, data, err)
+		//definition des variables utilisés pour créer la liste d'article
 			let postContainer, postTitle, postContent, buttonDelete, buttonEdit;
-			let fragment = document.createDocumentFragment();
-			if(data.length > 0){
-				postContainer = document.createElement('div');
+
+			if(data.length > 0){ //si on a au moins un article
+
+				postContainer = document.createElement('div'); //cree la div qui contiendra l'article
 				postContainer.setAttribute("class", "post-container");
-				postTitle = document.createElement('h4');
-				postTitle.innerHTML = data[1]
-				postContent = document.createElement('p');
-				postContent.innerHTML = data[0]
-				buttonDelete = document.createElement('button')
+				postTitle = document.createElement('h4'); //contiendra le titre
+				postTitle.innerHTML = data[1]; //ajout du titre
+				postContent = document.createElement('p'); //contiendra le contenu de l'article
+				postContent.innerHTML = data[0]; //ajout du contenu
+
+				//creation d'un bouton supprimer
+				buttonDelete = document.createElement('button');
 				buttonDelete.setAttribute("class", "btn btn-danger pull-right")
-				buttonDelete.innerHTML = "Supprimer"
-				buttonDelete.addEventListener('click', () => { 
+				buttonDelete.innerHTML = "Supprimer"; //set le libelle
+				buttonDelete.addEventListener('click', () => { //event lors du clique
+					//supprime l'article du smart contract
 					contractInstance.removePost(i, {gas: 5000000}, (err, data) =>{ 
 						console.log('Article supprimé !', err)
 						window.location.reload();
 					})
 				})
+
+				//creation d'un bouton editer
 				buttonEdit = document.createElement('button')
 				buttonEdit.setAttribute("class", "btn btn-primary pull-right")
-				buttonEdit.innerHTML = "Modifier"
-				buttonEdit.addEventListener('click', () => { 
-					console.log('EDIT ! 	',i)
-					document.getElementById('title-input').value = data[1]
-					quill.container.firstChild.innerHTML = data[0]
-					let submitButton = document.getElementById('submit-button')
-					submitButton.setAttribute('class', 'btn btn-primary')
-					submitButton.innerHTML ='Modifier'
+				buttonEdit.innerHTML = "Modifier"; //set le libelle
+				buttonEdit.addEventListener('click', () => { //event lors du click
+					//le formulaire d'ajout servira pour la modification
+					document.getElementById('title-input').value = data[1]; //set du titre
+					quill.container.firstChild.innerHTML = data[0]; //set le contenu
+					//modification du bouton "Publier"
+					let submitButton = document.getElementById('submit-button');
+					submitButton.setAttribute('class', 'btn btn-primary'); //modifie son theme
+					submitButton.innerHTML ='Modifier'; //modifie son libelle
+					//affiche le bouton annuler
 					document.getElementById('cancel-button').setAttribute('style', 'display:inline;');
-					indexEdit = i;
-					editing = true;
-					
+					indexEdit = i; //sauvegarde l'index de l'article que l'on est en train de modifier
+					editing = true; //inque que l'on est en mode edition
 				})
-				postContainer.appendChild(buttonDelete)
-				postContainer.appendChild(buttonEdit)
-				postContainer.appendChild(postTitle)
-				postContainer.appendChild(postContent)
-				fragment.appendChild(postContainer)
+				//ajout des composants
+				postContainer.appendChild(buttonDelete);
+				postContainer.appendChild(buttonEdit);
+				postContainer.appendChild(postTitle);
+				postContainer.appendChild(postContent);
+				document.getElementById('post-list').appendChild(postContainer); //ajout des composants dans le DOM
 			}
-			document.getElementById('post-list').appendChild(fragment)
-			//console.log('Result', data, 'Error', err);
 		});
-	}
+	} // FIN PARCOURS DES INDEX
+	
 })
